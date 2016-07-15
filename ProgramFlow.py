@@ -6,41 +6,41 @@ class ProgramFlow(object):
 	
 	def __init__(self):
 
-		self.cmdLine=""					#cmd command for hansoftexport.exe
+		self.cmdLine=""				#cmd command for hansoftexport.exe
 		self.fileToBeTransfered=""		#Name of the file to transfer (to ericoll preferably)
 		self.finalFileName=""			#Desired name for the transfered file
-		self.finalFolder=""				#Desired location (ericoll preferably)
-		self.latestExport=""			#folder path + file name for latest hansoft export
-		self.hansoftDatabase=""			#name of the hansoft database to connect to
-		self.hansoftServer=""			#name of the hansoft server to connect to
-		self.hansoftPort=""			#port number to connect to 
-		self.sdkUser=""
-		self.sdkPass=""
-		self.hansoftProjectName=""
-		self.hansoftProjectView=""
-		self.reportName=""
-		self.reportAuthor=""
-		self.query=""
-		self.configLine=""
-		self.macroName=""
-		self.hansoftExtractFolder=""
-		self.alteredExportsFolder=""
-		self.exhaustFolder=""
-		self.macroWorkbook=""
-		self.macroModule=""
-		self.configFile="C:\Users\ejoanyk\Desktop\ExHaUST\Config.txt" #just here for now to be able to test the methods 
-		self.adminFile=""
-		self.fullConfigFile=[]
+		self.finalFolder=""			#Desired location (ericoll preferably)
+		self.latestExport=""			#Folder path + file name for latest hansoft export
+		self.hansoftDatabase=""			#Name of the hansoft database to connect to
+		self.hansoftServer=""			#Name of the hansoft server to connect to
+		self.hansoftPort=""			#Port number to connect to 
+		self.sdkUser=""				#Hansoft SDK username
+		self.sdkPass=""				#Hansoft SDK password
+		self.hansoftProjectName=""		#Name of the project to look for
+		self.hansoftProjectView=""		#Backlog view, sprint-view etc
+		self.reportName=""			#Name of the report to fetch
+		self.reportAuthor=""			#Author of the report
+		self.query=""				#Hansoft query
+		self.configLine=""			#Will this be used? 
+		self.macroName=""			#Name of the macro to be run (if there is a macro that will be run)
+		self.hansoftExtractFolder=""		#Folder where HansoftExtract.exe lives
+		self.alteredExportsFolder=""		#Altered Exports folder
+		self.exhaustFolder=""			#Folder where ExHaUST.exe, Config.txt, README.txt, etc live
+		self.macroWorkbook=""			#Workbook where the macro (if there is one) is found
+		self.macroModule=""			#Module of the macro
+		self.configFile="C:\Users\ejoanyk\Desktop\ExHaUST\Config.txt" #path just here for now to be able to test the methods 
+		self.adminFile=""			#Full path to admin.txt
 		
-		self.filesToKeep=[]
+		self.fullConfigFile=[]			#All of the text in Config.txt, formatted into a list seperating the rows
+		self.filesToKeep=[]			#Will this be used? 
 		
-		self.currentRow=0
-		self.lastRow=0
-		self.nrConAttemptsAllowed=0
+		self.currentRow=0			#Counter allowing to loop through rows in Config.txt
+		self.lastRow=0				#Index of the last row in Config.txt
+		self.nrConAttemptsAllowed=0		#Numberr of attempts to connect to Hansoft that we allow
 
-		self.runMacro=False
-		self.reportRequested=False
-		self.queryRequested=False
+		self.runMacro=False			#Indicates whether a macro will be run or not
+		self.reportRequested=False		#True if the export is a report
+		self.queryRequested=False		#True if the export is a query
 
 	def SetAdminVars(self):
 		return 
@@ -61,34 +61,40 @@ class ProgramFlow(object):
 
 	def UpdateVars(self):
 		
-		self.ReadLineConfigFile(self.configFile) 
+		self.ReadLineConfigFile(self.configFile) 		#Calls ReadLineConfigFile to collect all of the information
+									#from Config.txt.
+		
+		roughConfigLine= shlex.split(self.fullConfigFile[self.currentRow], posix=False)	#Splits the current row into
+												#a list with one field at 
+												#each index.
 
-		roughConfigLine= shlex.split(self.fullConfigFile[self.currentRow], posix=False)
+		for j in roughConfigLine:						#Loops through the row to filter out
+		    roughConfigLine[roughConfigLine.index(j)] = j.strip("\"")		#quotations marks.
 
-
-		for j in roughConfigLine:
-		    roughConfigLine[roughConfigLine.index(j)] = j.strip("\"")
-
-		self.hansoftServer=roughConfigLine[0]
-		self.hansoftPort=roughConfigLine[1]
+		self.hansoftServer=roughConfigLine[0]					#Sets the first basic attributes
+		self.hansoftPort=roughConfigLine[1]					#of ProgramFlow
 		self.hansoftDatabase=roughConfigLine[2]
 		self.sdkUser=roughConfigLine[3]
 		self.sdkPass=roughConfigLine[4]
 		self.hansoftProjectName=roughConfigLine[5]
-		roughConfigLine[6]=roughConfigLine[6].strip("-")
-		self.hansoftProjectView=roughConfigLine[6]
+		roughConfigLine[6]=roughConfigLine[6].strip("-")			#Removes the dash from Project View field
+		self.hansoftProjectView=roughConfigLine[6]				#since this is the syntax used for HansoftExport.
 
-		def HandleMacroFields(indexOfRunMacro):
-			if roughConfigLine[indexOfRunMacro]=="-m":
+		def HandleMacroFields(indexOfRunMacro):				#Function for handling the fields concerning macros, and the way they
+										#might be at different indices depending on the report and query fields.
+										#Takes the index of the runMacro bool in roughCOnfigLine as input.
+			
+			if roughConfigLine[indexOfRunMacro]=="-m":		
+										
 				self.runMacro=True
 				self.macroWorkbook=roughConfigLine[indexOfRunMacro+1]
 				self.macroModule=roughConfigLine[indexOfRunMacro+2]
 				self.macroName=roughConfigLine[indexOfRunMacro+3]
-				if len(roughConfigLine)==roughConfigLine[indexOfRunMacro+4]:   #checks if the fileToBeTransfered field is filled in
-					self.fileToBeTransfered=roughConfigLine[indexOfRunMacro+4]
+				if len(roughConfigLine)==roughConfigLine[indexOfRunMacro+4]:   		#Checks if  fileToBeTransfered field is filled in,
+					self.fileToBeTransfered=roughConfigLine[indexOfRunMacro+4]	
 			return
 
-		if roughConfigLine[7]=="-r":
+		if roughConfigLine[7]=="-r":				#if report
 			self.reportRequested=True
 			self.reportName=roughConfigLine[8]
 			self.reportAuthor=roughConfigLine[9]
@@ -97,7 +103,7 @@ class ProgramFlow(object):
 			indexOfRunMacro=12	
 			HandleMacroFields(12)
 
-		elif roughConfigLine[7]=="-q":
+		elif roughConfigLine[7]=="-q":				#if query
 			self.queryRequested=True
 			self.query=roughConfigLine[8]
 			self.finalFolder=roughConfigLine[9]
