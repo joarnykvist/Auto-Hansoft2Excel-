@@ -60,6 +60,6 @@ class ProgramFlow(object):
 		return 
 
 
-print("qqqqqqqqqqqqqqqqqqqqqq")
+print("tobias härjar")
 g=ProgramFlow()
 g.SetAdminVars()
