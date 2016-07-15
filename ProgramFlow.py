@@ -12,7 +12,7 @@ class ProgramFlow(object):
 		self.latestExport=""			#folder path + file name for latest hansoft export
 		self.hansoftDatabase=""			#name of the hansoft database to connect to
 		self.hansoftServer=""			#name of the hansoft server to connect to
-		self.hansoftPort=""
+		self.hansoftPort=""			#port number to connect to 
 		self.sdkUser=""
 		self.sdkPass=""
 		self.hansoftProjectName=""
