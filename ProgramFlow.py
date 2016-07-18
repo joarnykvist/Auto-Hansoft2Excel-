@@ -135,7 +135,48 @@ class ProgramFlow(object):
 		return
 
 	def ControlFlow(self):
-		return
+		while currentRow <= lastRow:
+	            UpdateVars()    #update variable values for a new user input in config file
+	
+	            ##check that the input-row in config file is ok.
+	            if LineOK() == False:
+	                print("Could not process row " + str(currentRow) + " in " + configFile + ". Please check the input for errors, moving on to next row..")
+	                currentRow = currentRow + 1
+	                continue
+	
+	            ##run hansoft export.
+	            RunHansoftExport(hansoftExtractFolder, cmdLine)
+	            if wasExportSuccessful(latestExport) == False:
+	                print("Could not succeed retrieving data from Hansoft. Please check row " + str(currentRow) + " in " + configFile + " for errors, moving on to next row..") 
+	                currentRow = currentRow + 1
+	                continue
+	
+	            ##run macros if specified.
+	            if runMacro == True:
+	                try:
+	                    RunExcelMacro(macrosFolder, macroWorkbook, macroModule, macroName)
+	                except:
+	                    print("Error with running macro:" + macroName + ". Check that the parameters specified in line " + str(currentRow) + " in " + configFile + " are correct.") 
+	                    currentRow = currentRow + 1
+	                    continue
+	
+	            ##transfer the file to its final location if the specified folder is different than the altered exports folder.
+	            if finalFolder != alteredExportsFolder:
+	                try:
+	                    TransferFile(alteredExportsFolder, fileToBeTransferred, finalFolder, finalFileName)
+	                    print("File" + fileToBeTransferred + " successfully moved to " + finalFolder + " as " + finalFileName + "."
+	                except:
+	                    print("Error with transferring file: " + alteredExportsFolder + fileToBeTransferred + " to " + finalFolder + " as " + finalFileName + ". Check that the parameters specified in line " +str(currentRow) + " in " + configFile + " are correct.") 
+	
+	            ##move on to the next row in config file.
+	            currentRow = currentRow + 1
+
+	        ##do the clean-up                  
+	        RemoveFiles(alteredExportsFolder)
+	
+	        ##exit program
+	        print("Reached the end of + " configFile + ". Shutting down..."
+	        return
 
 	def ShouldFileBeTransfered(self):
 		return 
